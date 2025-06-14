@@ -371,34 +371,22 @@ ALTER TABLE [dbo].[Timesheet]  WITH CHECK ADD FOREIGN KEY([EmployeeID])
 REFERENCES [dbo].[Employee] ([EmployeeID])
 GO
 
-USE msdb;
-GO
+DECLARE @ProjectBinary VARBINARY(MAX);
 
-IF NOT EXISTS (SELECT * FROM msdb.dbo.sysjobs WHERE name = 'Run Import Timesheet Data')
-BEGIN
-    EXEC sp_add_job @job_name = N'Run Import Timesheet Data';
+-- read the .ispac file as a single BLOB
+SELECT @ProjectBinary = BulkColumn
+FROM   OPENROWSET(
+         BULK '$(IspacFullPath)',          -- macro replaced by sqlcmd
+         SINGLE_BLOB
+       ) AS ProjectFile;
 
-    EXEC sp_add_jobstep 
-        @job_name = N'Run Import Timesheet Data',
-        @step_name = N'Run SSIS Package',
-        @subsystem = N'SSIS',
-        @command = N'/ISSERVER "\\SSISDB\\Timesheet Imports\\Normalized_SSIS_Project\\Import Timesheet Data Audit" /SERVER localhost',
-        @database_name = N'master',
-        @on_success_action = 1;
+EXEC SSISDB.catalog.deploy_project
+     @folder_name   = N'Timesheet Imports',
+     @project_name  = N'Normalized_SSIS_Project',
+     @project_stream= @ProjectBinary,
+     @operation_id  = NULL;                -- returns operation-id if you need it
 
-    EXEC sp_add_schedule 
-        @schedule_name = N'Every Minute',
-        @freq_type = 4,              -- Daily
-        @freq_interval = 1,
-        @freq_subday_type = 4,       -- Minutes
-        @freq_subday_interval = 1,
-        @active_start_time = 000000;
 
-    EXEC sp_attach_schedule 
-        @job_name = N'Run Import Timesheet Data',
-        @schedule_name = N'Every Minute';
-
-    EXEC sp_add_jobserver 
-        @job_name = N'Run Import Timesheet Data';
-END
-GO
+EXEC SSISDB.catalog.create_folder 
+     @folder_name = N'Timesheet Imports',
+     @folder_id   = NULL;
