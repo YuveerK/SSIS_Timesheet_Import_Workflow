@@ -12,10 +12,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run SQL Setup
+      - name: Run SQL Setup with SQL Auth
         run: |
-          sqlcmd -S YUVEER -E -i scripts/create-db-and-tables.sql
-
+          sqlcmd -S localhost -U Auto_User_2 -P "Test@1234" -i scripts/create-db-and-tables.sql
 
       - name: Deploy SSIS ISPAC
         shell: cmd
@@ -25,4 +24,3 @@ jobs:
           /SourcePath:"Normalized_SSIS_Project.ispac" 
           /DestinationServer:"YUVEER" 
           /DestinationPath:"SSISDB\Timesheet Imports"
-
