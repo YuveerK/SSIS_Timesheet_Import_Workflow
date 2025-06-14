@@ -18,9 +18,11 @@ jobs:
 
 
       - name: Deploy SSIS ISPAC
-        run: |
-          "C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\ISDeploymentWizard.exe" ^
-          /Silent ^
-          /SourcePath:"Normalized_SSIS_Project.ispac" ^
-          /DestinationServer:"YUVEER" ^
+        shell: cmd
+        run: >
+          "C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\ISDeploymentWizard.exe" 
+          /Silent 
+          /SourcePath:"Normalized_SSIS_Project.ispac" 
+          /DestinationServer:"YUVEER" 
           /DestinationPath:"SSISDB\Timesheet Imports"
+
