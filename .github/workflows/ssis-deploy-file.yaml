@@ -1,0 +1,26 @@
+name: Deploy SSIS and Setup DB
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SQL Setup
+        run: |
+          sqlcmd -S YUVEER -E -i scripts/create-db-and-tables.sql
+
+
+      - name: Deploy SSIS ISPAC
+        run: |
+          "C:\Program Files (x86)\Microsoft SQL Server\150\DTS\Binn\ISDeploymentWizard.exe" ^
+          /Silent ^
+          /SourcePath:"Normalized_SSIS_Project.ispac" ^
+          /DestinationServer:"YUVEER" ^
+          /DestinationPath:"SSISDB\Timesheet Imports"
