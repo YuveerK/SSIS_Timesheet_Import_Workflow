@@ -17,8 +17,10 @@ jobs:
           sqlcmd -S localhost -U Auto_User_2 -P "Test@1234" -i scripts/create-db-and-tables.sql
 
       - name: Deploy DTSX using dtutil
+        shell: cmd
         run: |
           "C:\Program Files\Microsoft SQL Server\160\DTS\Binn\dtutil.exe" ^
           /FILE "packages\Import Timesheet Data Audit.dtsx" ^
           /DestServer "YUVEER" ^
           /COPY SQL;"\Import Timesheet Data Audit"
+
