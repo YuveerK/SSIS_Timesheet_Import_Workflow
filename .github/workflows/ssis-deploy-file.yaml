@@ -16,12 +16,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run DB init + ISPAC deploy
-        shell: pwsh
+        shell: powershell
         run: |
           $sql = @"
           :setvar IspacFullPath "$env:ISPAC_PATH"
           :r scripts/create-db-and-tables.sql
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
-          
+
           sqlcmd -S YUVEER -U Auto_User_2 -P "Test@1234" -i temp-deploy.sql
+
