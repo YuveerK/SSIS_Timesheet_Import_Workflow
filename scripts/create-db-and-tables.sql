@@ -1,16 +1,15 @@
 USE [master]
 GO
 
-IF DB_ID('SSISTimesheetIntegrationDb') IS NULL
-BEGIN
-    CREATE DATABASE [SSISTimesheetIntegrationDb]
-     CONTAINMENT = NONE
-     ON  PRIMARY 
-    ( NAME = N'SSISTimesheetIntegrationDb', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\SSISTimesheetIntegrationDb.mdf' , SIZE = 73728KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
-     LOG ON 
-    ( NAME = N'SSISTimesheetIntegrationDb_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\SSISTimesheetIntegrationDb_log.ldf' , SIZE = 270336KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
-END
-
+/****** Object:  Database [SSISTimesheetIntegrationDb]    Script Date: 2025/06/14 22:37:24 ******/
+CREATE DATABASE [SSISTimesheetIntegrationDb]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'SSISTimesheetIntegrationDb', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\SSISTimesheetIntegrationDb.mdf' , SIZE = 73728KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'SSISTimesheetIntegrationDb_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\SSISTimesheetIntegrationDb_log.ldf' , SIZE = 270336KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
 
 IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
 begin
