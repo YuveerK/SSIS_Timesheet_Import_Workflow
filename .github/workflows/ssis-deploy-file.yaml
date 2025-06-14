@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run DB init + ISPAC deploy
+      - name: Prepare temp deploy script
         shell: powershell
         run: |
           $sql = @"
@@ -24,5 +24,7 @@ jobs:
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
 
-          sqlcmd -S YUVEER -U Auto_User_2 -P "Test@1234" -i temp-deploy.sql
-
+      - name: Deploy .ispac to SSISDB using Windows Auth
+        shell: cmd
+        run: |
+          sqlcmd -S YUVEER -E -i temp-deploy.sql
