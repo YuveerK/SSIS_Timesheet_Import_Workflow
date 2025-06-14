@@ -28,3 +28,8 @@ jobs:
         shell: cmd
         run: |
           sqlcmd -S YUVEER -E -i temp-deploy.sql
+
+      - name: Create or update SQL Agent job (SSIS Package)
+        shell: cmd
+        run: |
+          sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
