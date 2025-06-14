@@ -8,22 +8,20 @@ jobs:
   deploy:
     runs-on: [self-hosted, windows]
 
+    env:
+      ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run SQL script to create DB and tables
-        shell: cmd
+      - name: Run DB init + ISPAC deploy
+        shell: pwsh
         run: |
-          sqlcmd -S YUVEER ^
-                 -U Auto_User_2 -P "Test@1234" ^
-                 -i scripts/create-db-and-tables.sql
-
-      - name: Deploy ISPAC to SSISDB
-        shell: cmd
-        run: |
-          "C:\Program Files\Microsoft SQL Server\160\DTS\Binn\ISDeploymentWizard.exe" ^
-          /Silent ^
-          /SourcePath:"C:\dev_zone\SSIS_Timesheet_Import_Workflow\Normalized_SSIS_Project.ispac" ^
-          /DestinationServer:"YUVEER" ^
-          /DestinationPath:"SSISDB\Timesheet Imports"
+          $sql = @"
+          :setvar IspacFullPath "$env:ISPAC_PATH"
+          :r scripts/create-db-and-tables.sql
+          "@
+          $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
+          
+          sqlcmd -S YUVEER -U Auto_User_2 -P "Test@1234" -i temp-deploy.sql
