@@ -33,3 +33,9 @@ jobs:
         shell: cmd
         run: |
           sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
+      
+      - name: Run SQL Agent Job (import data)
+        shell: cmd
+        run: |
+          sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
+
