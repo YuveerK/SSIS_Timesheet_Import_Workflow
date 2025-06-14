@@ -9,7 +9,7 @@ jobs:
     runs-on: [self-hosted, windows]
 
     env:
-      ISPAC_PATH: Normalized_SSIS_Project.ispac          # adjust if you move it
+      ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"          # adjust if you move it
 
     steps:
       - name: Checkout code
