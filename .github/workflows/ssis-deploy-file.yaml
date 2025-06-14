@@ -12,15 +12,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run SQL Setup
+      - name: Setup Database and Tables
         run: |
           sqlcmd -S localhost -U Auto_User_2 -P "Test@1234" -i scripts/create-db-and-tables.sql
 
-      - name: Deploy DTSX using dtutil
+      - name: Deploy SSIS ISPAC to SSISDB
         shell: cmd
-        run: |
-          "C:\Program Files\Microsoft SQL Server\160\DTS\Binn\dtutil.exe" ^
-          /FILE "packages\Import Timesheet Data Audit.dtsx" ^
-          /DestServer "YUVEER" ^
-          /COPY SQL;"\Import Timesheet Data Audit"
-
+        run: >
+          "C:\Program Files\Microsoft SQL Server\160\DTS\Binn\ISDeploymentWizard.exe"
+          /Silent
+          /SourcePath:"Normalized_SSIS_Project.ispac"
+          /DestinationServer:"YUVEER"
+          /DestinationPath:"SSISDB\Timesheet Imports"
