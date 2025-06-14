@@ -18,8 +18,10 @@ jobs:
       # ► build / DB-init step stays as-is …
 
       - name: Deploy ISPAC into SSISDB via T-SQL
+        shell: cmd
         run: |
           sqlcmd -S localhost ^
                  -U Auto_User_2 -P "Test@1234" ^
                  -v IspacFullPath="$(ISPAC_PATH)" ^
-                 -i scripts/create-db-and-tables.sql
+                 -i scripts/deploy-ssis-project.sql
+
