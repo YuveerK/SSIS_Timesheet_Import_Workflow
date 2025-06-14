@@ -20,8 +20,8 @@ jobs:
       - name: Deploy ISPAC into SSISDB via T-SQL
         shell: cmd
         run: |
-          sqlcmd -S localhost ^
+          sqlcmd -S YUVEER ^
                  -U Auto_User_2 -P "Test@1234" ^
                  -v IspacFullPath="$(ISPAC_PATH)" ^
-                 -i scripts/deploy-ssis-project.sql
+                 -i scripts/create-db-and-tables.sql
 
