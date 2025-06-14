@@ -4,6 +4,7 @@ GO
 DECLARE @jobName NVARCHAR(100) = N'import data';
 DECLARE @jobId UNIQUEIDENTIFIER;
 DECLARE @shouldReplace BIT = 1; -- Change to 0 if you don't want auto-replacement
+DECLARE @startDate INT = CONVERT(INT, CONVERT(VARCHAR, GETDATE(), 112));  -- Fix here
 
 -- Check if the job exists
 SELECT @jobId = job_id FROM msdb.dbo.sysjobs WHERE name = @jobName;
@@ -44,7 +45,7 @@ BEGIN
         @freq_interval = 1,
         @freq_subday_type = 4,  -- Minutes
         @freq_subday_interval = 1,
-        @active_start_date = CONVERT(INT, CONVERT(VARCHAR, GETDATE(), 112)),  -- Today
+        @active_start_date = @startDate,     -- use the variable here
         @active_start_time = 0;
 
     -- Attach schedule
