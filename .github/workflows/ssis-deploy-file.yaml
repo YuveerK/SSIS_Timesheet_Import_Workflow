@@ -1,4 +1,4 @@
-name: 🚀 Deploy SSIS Project
+name: Deploy SSIS Project
 
 on:
   push:
@@ -12,37 +12,30 @@ jobs:
       ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
 
     steps:
-      - name: 📦 Checkout source code from GitHub
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 📝 Prepare dynamic SQL deployment script
+      - name: Prepare temp deploy script
         shell: powershell
         run: |
-          Write-Host "🛠️ Preparing SQL deployment script..."
           $sql = @"
           :setvar IspacFullPath "$env:ISPAC_PATH"
           :r scripts/create-db-and-tables.sql
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
-          Write-Host "✅ temp-deploy.sql created."
 
-      - name: 📤 Deploy .ispac to SSISDB (Windows Authentication)
+      - name: Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-          echo 🔄 Running .ispac deployment via sqlcmd...
           sqlcmd -S YUVEER -E -i temp-deploy.sql
-          echo ✅ SSIS project deployed to SSISDB.
 
-      - name: 🛠️ Create or update SQL Agent Job
+      - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          echo 🔄 Creating/updating SQL Server Agent Job...
           sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
-          echo ✅ Job created or updated successfully.
-
-      - name: ▶️ Run SQL Agent Job (import data)
+      
+      - name: Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          echo 🚀 Starting SQL Agent Job: import data...
           sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
-          echo ✅ Job execution triggered.
+
