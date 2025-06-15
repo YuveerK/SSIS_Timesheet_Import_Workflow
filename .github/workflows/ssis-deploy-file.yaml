@@ -12,30 +12,52 @@ jobs:
       ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
 
     steps:
-      - name: Checkout code
+      - name: ✅ Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare temp deploy script
+      - name: 📝 Prepare temp deploy script
         shell: powershell
         run: |
+          Write-Host "🔄 Starting to build temp-deploy.sql…" 
           $sql = @"
           :setvar IspacFullPath "$env:ISPAC_PATH"
           :r scripts/create-db-and-tables.sql
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
+          Write-Host "✅ temp-deploy.sql created successfully! 🎉"
 
-      - name: Deploy .ispac to SSISDB using Windows Auth
+      - name: 🚀 Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -i temp-deploy.sql
+          echo 🔄 "Running temp-deploy.sql against SSISDB…" 
+          sqlcmd -S YUVEER -E -i temp-deploy.sql -b -o deploy.log
+          if %ERRORLEVEL% NEQ 0 (
+            echo ❌ "SSISDB deployment failed! Check deploy.log"
+            exit /b %ERRORLEVEL%
+          ) else (
+            echo ✅ "SSIS project deployed to SSISDB successfully! 📦"
+          )
 
-      - name: Create or update SQL Agent job (SSIS Package)
+      - name: 🛠️ Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
-      
-      - name: Run SQL Agent Job (import data)
+          echo 🔄 "Running create-import-job.sql…" 
+          sqlcmd -S YUVEER -E -i scripts/create-import-job.sql -b -o job-setup.log
+          if %ERRORLEVEL% NEQ 0 (
+            echo ❌ "Agent job creation/update failed! See job-setup.log"
+            exit /b %ERRORLEVEL%
+          ) else (
+            echo ✅ "SQL Agent job is ready! 🏃"
+          )
+
+      - name: ▶️ Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
-
+          echo 🔄 "Starting the 'import data' job…" 
+          sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'" -b -o run-job.log
+          if %ERRORLEVEL% NEQ 0 (
+            echo ❌ "Failed to start import job! Check run-job.log"
+            exit /b %ERRORLEVEL%
+          ) else (
+            echo ✅ "Import job started! Check SSISDB for logs. 📊"
+          )
