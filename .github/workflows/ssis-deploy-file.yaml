@@ -27,10 +27,11 @@ jobs:
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
 
-      - name: Deploy .ispac to SSISDB using SQL Auth
+      - name: Deploy .ispac to SSISDB (Windows Auth Required)
         shell: cmd
         run: |
-          sqlcmd -S "%SQL_SERVER%" -U "%SQL_USER%" -P "%SQL_PASSWORD%" -i temp-deploy.sql
+          	sqlcmd -S "%SQL_SERVER%" -E -i temp-deploy.sql
+
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd

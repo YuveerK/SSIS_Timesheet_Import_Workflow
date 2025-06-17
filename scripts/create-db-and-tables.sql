@@ -1,3 +1,8 @@
+-- Drop foreign keys
+ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Employee;
+ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Client;
+ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Description;
+
 -- 1) Create database if it doesn't exist
 IF DB_ID(N'SSISTimesheetIntegrationDb') IS NULL
     CREATE DATABASE SSISTimesheetIntegrationDb;
