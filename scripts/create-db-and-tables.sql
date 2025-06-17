@@ -175,14 +175,17 @@ GO
 
 -- 10) Create SSISDB folder only if it doesn’t already exist
 DECLARE @fid INT;
-SELECT @fid = folder_id
+
+SELECT TOP 1 
+    @fid = folder_id
   FROM SSISDB.catalog.folders
- WHERE name = N'Timesheet Imports'
-   AND parent_folder_id = 1;
+ WHERE folder_name = N'Timesheet Imports';
+-- (no parent_folder_id filter)
 
 IF @fid IS NULL
     EXEC SSISDB.catalog.create_folder
          @folder_name       = N'Timesheet Imports',
          @folder_description= N'Folder for timesheet projects',
-         @parent_folder_id  = 1;
+         @parent_folder_id  = 1;  -- root
 GO
+
