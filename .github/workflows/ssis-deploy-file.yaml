@@ -22,7 +22,7 @@ jobs:
         shell: powershell
         run: |
           $sql = @"
-          :setvar IspacFullPath "$env:ISPAC_PATH"
+          :setvar IspacFullPath `"$env:ISPAC_PATH`"
           :r scripts/create-db-and-tables.sql
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
@@ -30,15 +30,14 @@ jobs:
       - name: Deploy .ispac to SSISDB (Windows Auth Required)
         shell: cmd
         run: |
-          	sqlcmd -S "%SQL_SERVER%" -E -i temp-deploy.sql
-
+          sqlcmd -S 102.182.237.40,1433 -E -i temp-deploy.sql
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          sqlcmd -S "%SQL_SERVER%" -U "%SQL_USER%" -P "%SQL_PASSWORD%" -i scripts/create-import-job.sql
+          sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -i scripts/create-import-job.sql
 
       - name: Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          sqlcmd -S "%SQL_SERVER%" -U "%SQL_USER%" -P "%SQL_PASSWORD%" -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
+          sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
