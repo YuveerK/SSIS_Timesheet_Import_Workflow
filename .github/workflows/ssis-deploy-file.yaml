@@ -24,17 +24,17 @@ jobs:
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
 
-      - name: Deploy .ispac to SSISDB using SQL Auth
+      - name: Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-              sqlcmd -S YUVEER -E -i temp-deploy.sql
+          sqlcmd -S 192.168.0.107,1433 -E -i temp-deploy.sql
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          sqlcmd -S 192.168.0.107,1433 -U Auto_User_2 -P Test@1234 -i scripts/create-import-job.sql
+          sqlcmd -S 192.168.0.107,1433 -E -i scripts/create-import-job.sql
       
       - name: Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          sqlcmd -S 192.168.0.107,1433 -U Auto_User_2 -P Test@1234 -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
+          sqlcmd -S 192.168.0.107,1433 -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
