@@ -1,15 +1,43 @@
--- Drop foreign keys
-ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Employee;
-ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Client;
-ALTER TABLE Timesheet DROP CONSTRAINT FK_Timesheet_Description;
+-- 0) Drop FKs only if they exist
+USE SSISTimesheetIntegrationDb;  
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+     WHERE name = 'FK_Timesheet_Employee'
+       AND parent_object_id = OBJECT_ID('dbo.Timesheet')
+)
+    ALTER TABLE dbo.Timesheet DROP CONSTRAINT FK_Timesheet_Employee;
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+     WHERE name = 'FK_Timesheet_Client'
+       AND parent_object_id = OBJECT_ID('dbo.Timesheet')
+)
+    ALTER TABLE dbo.Timesheet DROP CONSTRAINT FK_Timesheet_Client;
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.foreign_keys
+     WHERE name = 'FK_Timesheet_Description'
+       AND parent_object_id = OBJECT_ID('dbo.Timesheet')
+)
+    ALTER TABLE dbo.Timesheet DROP CONSTRAINT FK_Timesheet_Description;
+GO
+
 
 -- 1) Create database if it doesn't exist
+USE [master];
+GO
+
 IF DB_ID(N'SSISTimesheetIntegrationDb') IS NULL
     CREATE DATABASE SSISTimesheetIntegrationDb;
 GO
 
-USE SSISTimesheetIntegrationDb;
+USE [SSISTimesheetIntegrationDb];
 GO
+
 
 -- 2) Employee table
 IF OBJECT_ID(N'dbo.Employee','U') IS NOT NULL
@@ -22,6 +50,7 @@ CREATE TABLE dbo.Employee (
 );
 GO
 
+
 -- 3) Description table
 IF OBJECT_ID(N'dbo.Description','U') IS NOT NULL
     DROP TABLE dbo.Description;
@@ -33,6 +62,7 @@ CREATE TABLE dbo.Description (
 );
 GO
 
+
 -- 4) Client table
 IF OBJECT_ID(N'dbo.Client','U') IS NOT NULL
     DROP TABLE dbo.Client;
@@ -43,6 +73,7 @@ CREATE TABLE dbo.Client (
     CreatedAt   DATETIME      NOT NULL DEFAULT GETDATE()
 );
 GO
+
 
 -- 5) Timesheet table
 IF OBJECT_ID(N'dbo.Timesheet','U') IS NOT NULL
@@ -68,25 +99,27 @@ CREATE TABLE dbo.Timesheet (
 );
 GO
 
+
 -- 6) Leave table
 IF OBJECT_ID(N'dbo.Leave','U') IS NOT NULL
     DROP TABLE dbo.Leave;
 GO
 CREATE TABLE dbo.Leave (
-    LeaveID           INT           IDENTITY(1,1) PRIMARY KEY,
-    EmployeeID        INT           NOT NULL,
-    TypeOfLeave       VARCHAR(255)  NULL,
-    StartDate         DATE          NULL,
-    EndDate           DATE          NULL,
-    NumberOfDays      DECIMAL(4,1)  NULL,
-    ApprovalObtained  VARCHAR(255)  NULL,
-    SickNoteProvided  VARCHAR(255)  NULL,
+    LeaveID            INT           IDENTITY(1,1) PRIMARY KEY,
+    EmployeeID         INT           NOT NULL,
+    TypeOfLeave        VARCHAR(255)  NULL,
+    StartDate          DATE          NULL,
+    EndDate            DATE          NULL,
+    NumberOfDays       DECIMAL(4,1)  NULL,
+    ApprovalObtained   VARCHAR(255)  NULL,
+    SickNoteProvided   VARCHAR(255)  NULL,
     ContactInformation VARCHAR(1000) NULL,
-    SubmissionDate    DATE          NULL,
-    CreatedAt         DATETIME      NOT NULL DEFAULT GETDATE(),
+    SubmissionDate     DATE          NULL,
+    CreatedAt          DATETIME      NOT NULL DEFAULT GETDATE(),
     CONSTRAINT FK_Leave_Employee FOREIGN KEY (EmployeeID) REFERENCES dbo.Employee(EmployeeID)
 );
 GO
+
 
 -- 7) Expense table
 IF OBJECT_ID(N'dbo.Expense','U') IS NOT NULL
@@ -103,6 +136,7 @@ CREATE TABLE dbo.Expense (
     CONSTRAINT FK_Expense_Employee FOREIGN KEY (EmployeeID) REFERENCES dbo.Employee(EmployeeID)
 );
 GO
+
 
 -- 8) AuditLog table
 IF OBJECT_ID(N'dbo.AuditLog','U') IS NOT NULL
@@ -122,22 +156,33 @@ CREATE TABLE dbo.AuditLog (
 );
 GO
 
+
+-- 9) Deploy the SSIS project
 DECLARE @ProjectBinary VARBINARY(MAX);
 
--- read the .ispac file as a single BLOB
 SELECT @ProjectBinary = BulkColumn
-FROM   OPENROWSET(
-         BULK '$(IspacFullPath)',          -- macro replaced by sqlcmd
-         SINGLE_BLOB
-       ) AS ProjectFile;
+FROM OPENROWSET(
+        BULK '$(IspacFullPath)',  -- replaced by sqlcmd
+        SINGLE_BLOB
+     ) AS ProjectFile;
 
 EXEC SSISDB.catalog.deploy_project
-     @folder_name   = N'Timesheet Imports',
-     @project_name  = N'Normalized_SSIS_Project',
-     @project_stream= @ProjectBinary,
-     @operation_id  = NULL;                -- returns operation-id if you need it
+     @folder_name    = N'Timesheet Imports',
+     @project_name   = N'Normalized_SSIS_Project',
+     @project_stream = @ProjectBinary;
+GO
 
 
-EXEC SSISDB.catalog.create_folder 
-     @folder_name = N'Timesheet Imports',
-     @folder_id   = NULL;
+-- 10) Create SSISDB folder only if it doesn’t already exist
+DECLARE @fid INT;
+SELECT @fid = folder_id
+  FROM SSISDB.catalog.folders
+ WHERE name = N'Timesheet Imports'
+   AND parent_folder_id = 1;
+
+IF @fid IS NULL
+    EXEC SSISDB.catalog.create_folder
+         @folder_name       = N'Timesheet Imports',
+         @folder_description= N'Folder for timesheet projects',
+         @parent_folder_id  = 1;
+GO
