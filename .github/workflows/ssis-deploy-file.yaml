@@ -5,13 +5,11 @@ on:
     branches: [main]
 
 jobs:
-  deploy-ssis:
-    name: Deploy SSIS Project (.ispac)
+  deploy:
     runs-on: [self-hosted, windows]
 
     env:
       ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
-      SQL_SERVER: "102.182.237.40,1433"
 
     steps:
       - name: Checkout code
@@ -21,7 +19,7 @@ jobs:
         shell: powershell
         run: |
           $sql = @"
-          :setvar IspacFullPath `"$env:ISPAC_PATH`"
+          :setvar IspacFullPath "$env:ISPAC_PATH"
           :r scripts/create-db-and-tables.sql
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
@@ -29,28 +27,15 @@ jobs:
       - name: Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-          sqlcmd -S %SQL_SERVER% -E -i temp-deploy.sql
-
-  deploy-sql:
-    name: Create & Run SQL Agent Job
-    runs-on: windows-latest
-    needs: deploy-ssis  # Wait until SSIS deployment is done
-
-    env:
-      SQL_SERVER: "102.182.237.40,1433"
-      SQL_USER: "Auto_User_2"
-      SQL_PASSWORD: "Test@1234"
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          sqlcmd -S YUVEER -E -i temp-deploy.sql
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -i scripts/create-import-job.sql
-
+          sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
+      
       - name: Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          sqlcmd -S %SQL_SERVER% -U %SQL_USER% -P %SQL_PASSWORD% -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
+          sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
+
