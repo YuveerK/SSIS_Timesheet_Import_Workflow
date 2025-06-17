@@ -27,7 +27,7 @@ jobs:
       - name: Deploy .ispac to SSISDB using SQL Auth
         shell: cmd
         run: |
-          sqlcmd -S 192.168.0.107,1433 -U Auto_User_2 -P Test@1234 -i temp-deploy.sql
+              sqlcmd -S YUVEER -E -i temp-deploy.sql
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
