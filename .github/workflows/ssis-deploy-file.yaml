@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, windows]
+    runs-on: windows-latest
 
     env:
       ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
@@ -27,15 +27,14 @@ jobs:
       - name: Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -i temp-deploy.sql
+          sqlcmd -S 192.168.0.107,1433 -E -i temp-deploy.sql
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -i scripts/create-import-job.sql
-      
+          sqlcmd -S 192.168.0.107,1433 -E -i scripts/create-import-job.sql
+
       - name: Run SQL Agent Job (import data)
         shell: cmd
         run: |
-          sqlcmd -S YUVEER -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
-
+          sqlcmd -S 192.168.0.107,1433 -E -Q "EXEC msdb.dbo.sp_start_job @job_name = N'import data'"
