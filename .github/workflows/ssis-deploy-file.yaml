@@ -5,14 +5,13 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
-    runs-on: windows-latest
+  deploy-ssis:
+    name: Deploy SSIS Project (.ispac)
+    runs-on: [self-hosted, windows]
 
     env:
       ISPAC_PATH: "C:\\dev_zone\\SSIS_Timesheet_Import_Workflow\\Normalized_SSIS_Project.ispac"
       SQL_SERVER: "102.182.237.40,1433"
-      SQL_USER: "Auto_User_2"
-      SQL_PASSWORD: "Test@1234"
 
     steps:
       - name: Checkout code
@@ -27,10 +26,24 @@ jobs:
           "@
           $sql | Out-File -FilePath temp-deploy.sql -Encoding ASCII
 
-      - name: Deploy .ispac to SSISDB (Windows Auth Required)
+      - name: Deploy .ispac to SSISDB using Windows Auth
         shell: cmd
         run: |
-          sqlcmd -S 102.182.237.40,1433 -E -i temp-deploy.sql
+          sqlcmd -S %SQL_SERVER% -E -i temp-deploy.sql
+
+  deploy-sql:
+    name: Create & Run SQL Agent Job
+    runs-on: windows-latest
+    needs: deploy-ssis  # Wait until SSIS deployment is done
+
+    env:
+      SQL_SERVER: "102.182.237.40,1433"
+      SQL_USER: "Auto_User_2"
+      SQL_PASSWORD: "Test@1234"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Create or update SQL Agent job (SSIS Package)
         shell: cmd
